@@ -2,59 +2,106 @@
  * 
  */
 
+import java.util.Random;
+
 /**
  * @author robbie manyathela
  *
  */
 public class FiveCardHand {
     
-    public class SUITS {
-        char club = 0x00002663;
-        char spade = 0x00002660;
-        char heart = 0x00002665;
-        char diamond = 0x00002666;
+    public static class SUITS {
+        // Using the order of highest to lowest - SHDC
+        private final static char spade = 0x00002660;
+        private final static char heart = 0x00002665;
+        private final static char diamond = 0x00002666;
+        private final static char club = 0x00002663;
         
-        public char getClub() {
+        public static char getClub() {
             return club;
         }
         
-        public char getHeart() {
+        public static char getHeart() {
             return heart;
         }
         
-        public char getDiamond() {
+        public static char getDiamond() {
             return diamond;
         }
         
-        public char getSpade() {
+        public static char getSpade() {
             return spade;
         }
     }
     
-    private final char ACE = 'A';
-    private final char JACK = 'J';
-    private final char QUEEN = 'Q';
-    private final char KING = 'K';
+    private static final char ACE = 'A';
+    private static final char JACK = 'J';
+    private static final char QUEEN = 'Q';
+    private static final char KING = 'K';
     
-    private final int upperBoundPip = 13;  // generates numbers between 0 to 12
-    private final int upperBoundSuits = 4;  // generates numbers between 0 to 3
+    private static final int upperBoundPip = 13;  // generates numbers between 0 to 12
+    private static final int upperBoundSuits = 4;  // generates numbers between 0 to 3
 
     /**
      * @param args
      */
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
+        System.out.println("Shuffling... Shuffling... Shuffling... ");
+        System.out.println("Your hand: " + generateFiveCardHand());
     }
 
     /**
      * 
      * @return five card hand
      */
-    private String generateFiveCardHand() {
-        String hand = "";
+    private static String generateFiveCardHand() {
+        StringBuilder hand = new StringBuilder();
+
+        Random randSuits = new Random();
+        Random randPip = new Random();
+
+        int tempPip = 0;
+        int tempSuit = 0;
+
+        for(int x = 0; x < 5; x++){
+            tempPip = randPip.nextInt(upperBoundPip) + 1;
+            tempSuit = randSuits.nextInt(upperBoundSuits) + 1;
+
+            switch(tempPip){
+                case 1:     // Ace - A
+                    hand.append(ACE);
+                    break;
+                case 11:    // Jack - J
+                    hand.append(JACK);
+                    break;
+                case 12:    // Queen - Q
+                    hand.append(QUEEN);
+                    break;
+                case 13:    // King - K
+                    hand.append(KING);
+                    break;
+                default:    // 2 to 10
+                    hand.append(tempPip);
+                    break;
+            }
+
+            switch (tempSuit){
+                case 1:
+                    hand.append(SUITS.getSpade());
+                    break;
+                case 2:
+                    hand.append(SUITS.getHeart());
+                    break;
+                case 3:
+                    hand.append(SUITS.getDiamond());
+                    break;
+                case 4:
+                    hand.append(SUITS.getClub());
+                    break;
+            }
+        }
         
-        return hand;
+        return hand.toString();
     }
     
     /**
