@@ -3,6 +3,8 @@ package hand.card.five; /**
  */
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -46,10 +48,17 @@ public class FiveCardHand {
     private static ArrayList<Integer> pipList = new ArrayList<>();
     private static ArrayList<Character> suitList = new ArrayList<>();
 
+    private final static ArrayList<Integer> PIP_RF_ORDER = new ArrayList<Integer>(Arrays.asList(10, 11, 12, 13, 1));    // 10, J, , Q, K, A
+    private final static ArrayList<Integer> PIP_RF_ORDER_REVERSED = new ArrayList<Integer>(Arrays.asList(1, 13, 12, 11, 10));   // A, K, Q, J, 10
+
+    private final static ArrayList<List<Integer>> PIP_SF_ORDER = new ArrayList<List<Integer>>();
+
     /**
      * @param args
      */
     public static void main(String[] args) {
+        populateArrayCombinations();
+
         System.out.println("Shuffling... Shuffling... Shuffling... ");
         System.out.println("Your hand: " + generateFiveCardHand());
         System.out.println("You have: " + determineHand(pipList, suitList));
@@ -80,8 +89,13 @@ public class FiveCardHand {
                 }
             }
         }
-        
-        return hand.toString();
+
+        String handOutput = "";
+        for (String card: hand) {
+            handOutput += card.concat(" ");
+        }
+
+        return handOutput;
     }
     
     /**
@@ -93,15 +107,15 @@ public class FiveCardHand {
     private static String determineHand(ArrayList<Integer> pipList, ArrayList<Character> suitList) {
         String conclusion = "";
 
-        if(false) {
+        if(royalFush(pipList, suitList)) {
            conclusion = "Royal Flush";
-        }  else if(false) {
+        }  else if(straightFlush(pipList, suitList)) {
             conclusion = "Straight Flush"; 
         } else if(false) {
             conclusion = "Four of a Kind";
         } else if(false) {
             conclusion = "Full House";
-        }  else if(false) {
+        }  else if(flush(suitList)) {
             conclusion = "Flush";
         } else if(false) {
             conclusion = "Straight";
@@ -118,6 +132,9 @@ public class FiveCardHand {
         return conclusion;
     }
 
+    /**
+     * @param pip the list of Pips from the five hand
+     */
     private static boolean findHighCard(ArrayList<Integer> pip){
         int highCard = 0;
 
@@ -132,6 +149,9 @@ public class FiveCardHand {
         return highCard > 0;
     }
 
+    /**
+     * Will create the card - Pip & suit combination for high ranking cards
+     */
     private static String generateCard(int pip, int suit) {
         String card = "";
 
@@ -220,7 +240,8 @@ public class FiveCardHand {
     }
 
     /**
-     *
+     * Will create the card - Pip & suit combination for high ranking cards
+     * Used to search the card
      */
     private static String getCard(int pip, int suit) {
         String card = "";
@@ -267,5 +288,85 @@ public class FiveCardHand {
         }
 
         return card;
+    }
+
+    /**
+     *
+     * @param suits - the list of the cards' suit
+     * @return - the result as to whether hand is a flush
+     */
+    private static boolean flush(ArrayList<Character> suits) {
+        boolean result = false;
+        for (int x = 0; x < suits.size(); x++) {
+            if (x == 4) {
+                result = suits.get(4) == suits.get(3);
+            } else if (suits.get(x) == suits.get(x+1)) {
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    private static boolean straightFlush(ArrayList<Integer> pips, ArrayList<Character> suits) {
+        boolean isSameSuit = sameSuit(suits);
+        boolean result = false;
+
+        for (List<Integer> pipCombo: PIP_SF_ORDER){
+            if (pips.equals(pipCombo) && isSameSuit){
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     *
+     * @param pips - the list of the card's pip
+     * @param suits - the list of the card's suits
+     * @return - the result as to whether the hand is a royal flash.
+     */
+    private static boolean royalFush(ArrayList<Integer> pips, ArrayList<Character> suits) {
+        boolean result = false;
+
+        if((pips.equals(PIP_RF_ORDER) || pips.equals(PIP_RF_ORDER_REVERSED) && sameSuit(suits))) {
+            result = true;
+        }
+
+        return result;
+    }
+
+    // determines that the hand has the same suit
+    private static boolean sameSuit(ArrayList<Character> suits) {
+        return (suits.get(4) == suits.get(0) && suits.get(0) == suits.get(1) && suits.get(1) == suits.get(2) &&
+                suits.get(2) == suits.get(3) && suits.get(3) == suits.get(4));
+    }
+
+    // the combination of the consecutive pip s for the cards that will qualify as a straight flush
+    // either in ascending or descending order
+    private static void populateArrayCombinations(){
+        ArrayList<Integer> order1 = new ArrayList<Integer>(Arrays.asList(2,3,4,5,6));
+        ArrayList<Integer> order2 = new ArrayList<Integer>(Arrays.asList(3,4,5,6,7));
+        ArrayList<Integer> order3 = new ArrayList<Integer>(Arrays.asList(4,5,6,7,8));
+        ArrayList<Integer> order4 = new ArrayList<Integer>(Arrays.asList(5,6,7,8,9));
+        ArrayList<Integer> order5 = new ArrayList<Integer>(Arrays.asList(6,7,8,9,10));
+        // reverse
+        ArrayList<Integer> order6 = new ArrayList<Integer>(Arrays.asList(6,5,4,3,2));
+        ArrayList<Integer> order7 = new ArrayList<Integer>(Arrays.asList(7,6,5,4,3));
+        ArrayList<Integer> order8 = new ArrayList<Integer>(Arrays.asList(8,7,6,5,4));
+        ArrayList<Integer> order9 = new ArrayList<Integer>(Arrays.asList(9,8,7,6,5));
+        ArrayList<Integer> order10 = new ArrayList<Integer>(Arrays.asList(10,9,8,7,6));
+
+        PIP_SF_ORDER.add(order1);
+        PIP_SF_ORDER.add(order2);
+        PIP_SF_ORDER.add(order3);
+        PIP_SF_ORDER.add(order4);
+        PIP_SF_ORDER.add(order5);
+        PIP_SF_ORDER.add(order6);
+        PIP_SF_ORDER.add(order7);
+        PIP_SF_ORDER.add(order8);
+        PIP_SF_ORDER.add(order9);
+        PIP_SF_ORDER.add(order10);
     }
 }
