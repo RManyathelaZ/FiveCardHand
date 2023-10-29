@@ -2,10 +2,7 @@ package hand.card.five; /**
  * 
  */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 /**
  * @author robbie manyathela
@@ -66,7 +63,7 @@ public class FiveCardHand {
 
     /**
      * 
-     * @return five card hand
+     * @return five card hand generated
      */
     private static String generateFiveCardHand() {
         ArrayList<String> hand = new ArrayList<String>();
@@ -76,18 +73,23 @@ public class FiveCardHand {
 
         int tempPip;
         int tempSuit;
+        try {
+            for (int x = 0; x < 5; x++) {
+                tempPip = randPip.nextInt(upperBoundPip) + 1;
+                tempSuit = randSuits.nextInt(upperBoundSuits) + 1;
 
-        for(int x = 0; x < 5; x++) {
-            tempPip = randPip.nextInt(upperBoundPip) + 1;
-            tempSuit = randSuits.nextInt(upperBoundSuits) + 1;
-
-            if (x == 0){
-                hand.add(x, generateCard(tempPip, tempSuit));
-            } else {
-                if (!hand.contains(getCard(tempPip, tempSuit))) {
+                if (x == 0) {
                     hand.add(x, generateCard(tempPip, tempSuit));
+                } else {
+                    if (!hand.contains(getCard(tempPip, tempSuit))) {
+                        hand.add(x, generateCard(tempPip, tempSuit));
+                    } else {
+                        generateFiveCardHand();     // recursively call the method to avoid duplicates
+                    }
                 }
             }
+        } catch (Exception ex) {
+            generateFiveCardHand();     // recursively call the method to avoid duplicates
         }
 
         String handOutput = "";
@@ -103,6 +105,7 @@ public class FiveCardHand {
      * @param pipList the five card pips that were generated
      * @param suitList the five card suits that were generated
      * @return the conclusion on what the hand is
+     *
      */
     private static String determineHand(ArrayList<Integer> pipList, ArrayList<Character> suitList) {
         String conclusion = "";
@@ -111,19 +114,19 @@ public class FiveCardHand {
            conclusion = "Royal Flush";
         }  else if(straightFlush(pipList, suitList)) {
             conclusion = "Straight Flush"; 
-        } else if(false) {
+        } else if(determinePairHand(pipList, suitList) == 4) {
             conclusion = "Four of a Kind";
-        } else if(false) {
+        } else if(fullHouse(pipList, suitList) == 5) {
             conclusion = "Full House";
         }  else if(flush(suitList)) {
             conclusion = "Flush";
-        } else if(false) {
+        } else if(Straight(pipList)) {
             conclusion = "Straight";
-        }  else if(false) {
+        }  else if(determinePairHand(pipList, suitList) == 3) {
             conclusion = "Three of a Kind";
-        }  else if(false) {
+        }  else if(determinePairHand(pipList, suitList) == 2) {
             conclusion = "Two pair";
-        } else if(false) {
+        } else if(determinePairHand(pipList, suitList) == 1) {
             conclusion = "One Pair";
         } else if(findHighCard(pipList)){
             conclusion = "High card";
@@ -133,16 +136,17 @@ public class FiveCardHand {
     }
 
     /**
+     *
      * @param pip the list of Pips from the five hand
+     * @return The highest ranked card in your hand with an 'A' being the highest and '2' being the lowest
+     *
      */
     private static boolean findHighCard(ArrayList<Integer> pip){
         int highCard = 0;
 
-        for (int x = 0; x < pip.size() - 1; x++){
-            if (pip.get(x+1) != null && pip.get(x) > pip.get(x+1)){
+        for (int x = 0; x < pip.size(); x++){
+            if( highCard < pip.get(x)) {
                 highCard = pip.get(x);
-            } else if (pip.get(x+1) != null && pip.get(x) < pip.get(x+1)){
-                highCard = pip.get(x+1);
             }
         }
 
@@ -294,6 +298,7 @@ public class FiveCardHand {
      *
      * @param suits - the list of the cards' suit
      * @return - the result as to whether hand is a flush
+     *
      */
     private static boolean flush(ArrayList<Character> suits) {
         boolean result = false;
@@ -308,6 +313,31 @@ public class FiveCardHand {
         return result;
     }
 
+    /**
+     *
+     * @param pips - list of the card's Pip value
+     * @return whether the hand has Five cards of any suit, in sequential order
+     *
+     */
+    private static boolean Straight(ArrayList<Integer> pips) {
+        boolean result = false;
+
+        for (List<Integer> pipCombo: PIP_SF_ORDER){
+            if (pips.equals(pipCombo)){
+                result = true;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     *
+     * @param pips - list of the card's Pip value
+     * @param suits - list of the card's suit value
+     * @return whether the hand has Five cards of the same suit in sequential order
+     *
+     */
     private static boolean straightFlush(ArrayList<Integer> pips, ArrayList<Character> suits) {
         boolean isSameSuit = sameSuit(suits);
         boolean result = false;
@@ -326,6 +356,7 @@ public class FiveCardHand {
      * @param pips - the list of the card's pip
      * @param suits - the list of the card's suits
      * @return - the result as to whether the hand is a royal flash.
+     *
      */
     private static boolean royalFush(ArrayList<Integer> pips, ArrayList<Character> suits) {
         boolean result = false;
@@ -368,5 +399,119 @@ public class FiveCardHand {
         PIP_SF_ORDER.add(order8);
         PIP_SF_ORDER.add(order9);
         PIP_SF_ORDER.add(order10);
+    }
+
+    /**
+     * To check the number of Pips with the same value
+     * @param pips - the list of the hand's pips
+     * @return - map, with the pip as key, the indices as the list of numbers
+     *
+     */
+    private static Map<Integer, List<Integer>> determineNumberOfPairs(ArrayList<Integer> pips) {
+        int indexToSkip = -1;
+        Map<Integer, List<Integer>> results = new HashMap<>();
+        for(int x = 0; x < pips.size(); x++){
+            indexToSkip = x;
+            List<Integer> values = new ArrayList<Integer>();
+            for (int y = 0; y < pips.size(); y++){
+                if(y == x) continue;;       // to skip lookup of the current index to compare with
+                if(pips.get(x) == pips.get(y)){
+                    if(!values.contains(x)) values.add(x);
+                    if(!values.contains(y)) values.add(y);
+                }
+            }
+            if (values.size() > 1) results.put(pips.get(x), values);
+        }
+        return results;
+    }
+
+    /**
+     * @param pips - list of the card's Pip value
+     * @param suits - list of the card's suit value
+     * @return to determine the number of pairs the hand has
+     *
+     */
+    private static int determinePairHand(ArrayList<Integer> pips, ArrayList<Character> suits) {
+        int result = 0;
+
+        Map<Integer, List<Integer>> pairCount = determineNumberOfPairs(pips);
+
+        if (pairCount.size() == 0) return result;
+
+        if (pairCount.size() == 1) {     // when hand has one pair record
+            for (int i : pairCount.keySet()) {
+                if (pairCount.get(i).size() == 2) {    // pair
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+
+                    if (suits.get(index_a) != suits.get(index_b)) result = 1;
+                } else if (pairCount.get(i).size() == 3) {      // potentially Three of a kind
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+                    int index_c = pairCount.get(i).get(2);
+
+                    if (suits.get(index_a) != suits.get(index_b) &&
+                            suits.get(index_b) != suits.get(index_c) &&
+                            suits.get(index_c) != suits.get(index_a)) {
+                        result = 3;
+                    }
+                } else if (pairCount.get(i).size() == 4) {      // potentially Four of a kind
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+                    int index_c = pairCount.get(i).get(2);
+                    int index_d = pairCount.get(i).get(2);
+
+                    if (pips.get(index_a) == pips.get(index_b) &&
+                            pips.get(index_b) == pips.get(index_c) &&
+                            pips.get(index_c) == pips.get(index_d) &&
+                            pips.get(index_d) == pips.get(index_a)) {
+                        result = 4;
+                    }
+                }
+            }
+        } else if (pairCount.size() == 2) {       // when hand has two records
+            for (int i : pairCount.keySet()) {   //  two pair hand
+                if (pairCount.get(i).size() == 2) {    // pair
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+
+                    if (suits.get(index_a) != suits.get(index_b)) result += 1;      // return 2
+                }
+            }
+        }
+        return result;
+    }
+
+    private static int fullHouse(ArrayList<Integer> pips, ArrayList<Character> suits) {
+        int result = 0;
+
+        Map<Integer, List<Integer>> pairCount = determineNumberOfPairs(pips);
+
+        if (pairCount.size() == 0) return result;
+
+        if (pairCount.size() == 2) {
+            for (int i: pairCount.keySet()) {// potentially Full house
+                if (pairCount.get(i).size() == 2) {
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+
+                    if ((pips.get(index_a) == pips.get(index_b)) && (suits.get(index_a) != suits.get(index_b))) {
+                        result += 2;
+                    }
+                } else if (pairCount.get(i).size() == 3) {
+                    int index_a = pairCount.get(i).get(0);
+                    int index_b = pairCount.get(i).get(1);
+                    int index_c = pairCount.get(i).get(2);
+
+                    if (((pips.get(index_a) == pips.get(index_b)) && (pips.get(index_b) == pips.get(index_c)) &&
+                        (pips.get(index_c) == pips.get(index_a))) && ((suits.get(index_a) != suits.get(index_b)) &&
+                            (suits.get(index_b) != suits.get(index_c)) && (suits.get(index_c) != suits.get(index_a)))) {
+                            result += 3;
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 }
